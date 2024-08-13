@@ -2,11 +2,17 @@
 pragma solidity 0.8.23;
 
 import {Pausable} from "openzeppelin-contracts/utils/Pausable.sol";
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {IERC721Receiver} from "openzeppelin-contracts/token/ERC721/IERC721Receiver.sol";
 import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
+import {UUPSProxiable} from "./proxy/UUPSProxiable.sol";
+import {Initializable} from "./proxy/Initializable.sol";
 
-contract StakingTask is Pausable, Ownable, IERC721Receiver {
+contract StakingTask is
+    Pausable,
+    IERC721Receiver,
+    UUPSProxiable,
+    Initializable
+{
     struct NFTStakingData {
         bool isStaked;
         address contractAddress;
@@ -22,7 +28,7 @@ contract StakingTask is Pausable, Ownable, IERC721Receiver {
         uint32 rewardsClaimedAt;
         NFTStakingData[] nftData;
     }
-
+    address public s_owner;
     uint256 public s_rewardPerBlock;
     uint32 public s_withdrawDelay;
     uint32 public s_rewardsClaimDelay;
@@ -30,19 +36,30 @@ contract StakingTask is Pausable, Ownable, IERC721Receiver {
     mapping(address user => mapping(address nftContractAddress => mapping(uint256 tokenId => uint256))) s_nftIndex;
     mapping(address => UserStakingData) public s_userStakingData;
 
-    constructor(
+    function initialize(
+        address _owner,
         uint256 _rewardsPerBlock,
         uint32 _withdrawDelay,
         uint32 _rewardsClaimDelay
-    ) Ownable(_msgSender()) {
+    ) external reinitializer(1) {
+        s_owner = _owner;
         s_rewardPerBlock = _rewardsPerBlock;
         s_withdrawDelay = _withdrawDelay;
         s_rewardsClaimDelay = _rewardsClaimDelay;
     }
 
+    modifier onlyOwner() {
+        require(_msgSender() == s_owner, "Not Owner");
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
                            CONTROL MECHANICS
     //////////////////////////////////////////////////////////////*/
+
+    function _authorizeUpgrade(address) internal view override onlyOwner {
+        // NOP
+    }
 
     function changeRewardsPerBlock(
         uint256 _rewardsPerBlock
@@ -162,7 +179,7 @@ contract StakingTask is Pausable, Ownable, IERC721Receiver {
             }
         }
         s_userStakingData[user].rewardsClaimedAt = uint32(block.timestamp);
-        bool success  = payable(user).send(totalRewards);
+        bool success = payable(user).send(totalRewards);
         require(success, "Rewards Not Claimed");
     }
 
