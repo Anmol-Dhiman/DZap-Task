@@ -6,8 +6,9 @@ contract MockNFT is ERC721 {
     uint256 public tokenId;
     constructor() ERC721("mock NFT contract", "MNFT") {}
 
-    function mint() external {
+    function mint() external returns (uint256) {
         tokenId++;
         _mint(msg.sender, tokenId);
+        return tokenId;
     }
 }

@@ -33,7 +33,8 @@ contract StakingTask is
     uint32 public s_withdrawDelay;
     uint32 public s_rewardsClaimDelay;
 
-    mapping(address user => mapping(address nftContractAddress => mapping(uint256 tokenId => uint256))) s_nftIndex;
+    mapping(address user => mapping(address nftContractAddress => mapping(uint256 tokenId => uint256)))
+        public s_nftIndex;
     mapping(address => UserStakingData) public s_userStakingData;
 
     function initialize(
@@ -89,10 +90,10 @@ contract StakingTask is
                              USER CONTROLS
     //////////////////////////////////////////////////////////////*/
 
-    function stakeOneNFT(address _nftContractAddress, uint256 _id) external {
+    function stakeNFT(address _nftContractAddress, uint256 _id) external {
         _stakeNFT(_nftContractAddress, _id);
     }
-    function stakeDifferentNFTs(
+    function stakeNFT(
         address[] memory _contractAddress,
         uint256[] memory _ids
     ) external {
@@ -109,7 +110,7 @@ contract StakingTask is
         }
     }
 
-    function stakeSameNFTs(
+    function stakeNFT(
         address _nftContractAddress,
         uint256[] memory _ids
     ) external {
@@ -135,7 +136,7 @@ contract StakingTask is
         NFTStakingData memory nftData = s_userStakingData[user].nftData[index];
         require(!nftData.isStaked, "NFT is staked");
         require(
-            nftData.unstakeTime + s_withdrawDelay >= block.timestamp,
+            block.timestamp >= nftData.unstakeTime + s_withdrawDelay,
             "NFT Withdraw Delay"
         );
         IERC721(nftData.contractAddress).safeTransferFrom(
@@ -161,8 +162,10 @@ contract StakingTask is
         for (uint i = 0; i < length; i++) {
             if (s_userStakingData[user].nftData[i].isStaked) {
                 totalRewards +=
-                    s_userStakingData[user].nftData[i].stakingBlockNumber *
+                    (block.number -
+                        s_userStakingData[user].nftData[i].stakingBlockNumber) *
                     s_rewardPerBlock;
+
                 s_userStakingData[user].nftData[i].stakingBlockNumber = block
                     .number;
             } else {
@@ -170,9 +173,12 @@ contract StakingTask is
                     s_userStakingData[user].nftData[i].unstakingBlockNumber != 0
                 ) {
                     totalRewards +=
-                        s_userStakingData[user]
+                        (s_userStakingData[user]
                             .nftData[i]
-                            .unstakingBlockNumber *
+                            .unstakingBlockNumber -
+                            s_userStakingData[user]
+                                .nftData[i]
+                                .stakingBlockNumber) *
                         s_rewardPerBlock;
                     s_userStakingData[user].nftData[i].unstakingBlockNumber = 0;
                 }
@@ -215,7 +221,30 @@ contract StakingTask is
         bytes calldata data
     ) external returns (bytes4) {
         require(operator == address(this), "invalid operator");
-        require(from == tx.origin, "invalid initatior");
         return IERC721Receiver.onERC721Received.selector;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                             VIEW FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function getNFTData(
+        uint256 index
+    )
+        external
+        view
+        returns (bool, address, uint256, uint256, uint256, uint32, uint32)
+    {
+        NFTStakingData memory _nftStakingData = s_userStakingData[_msgSender()]
+            .nftData[index];
+        return (
+            _nftStakingData.isStaked,
+            _nftStakingData.contractAddress,
+            _nftStakingData.id,
+            _nftStakingData.stakingBlockNumber,
+            _nftStakingData.unstakingBlockNumber,
+            _nftStakingData.unstakeTime,
+            _nftStakingData.stakeTime
+        );
     }
 }
