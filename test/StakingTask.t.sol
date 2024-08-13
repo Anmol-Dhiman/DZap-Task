@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-
-contract StakingTaskTests {
-     
+import "forge-std/Test.sol";
+import "forge-std/console.sol";
+contract StakingTaskTests is Test {
+    
 }
