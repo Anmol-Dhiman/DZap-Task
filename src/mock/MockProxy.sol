@@ -3,15 +3,15 @@ pragma solidity 0.8.23;
 
 /// @custom:authors: [@anmol-dhiman]
 
-import {Initializable} from "openzeppelin-contracts/proxy/utils/Initializable.sol";
-import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "../proxy/Initializable.sol";
+import {UUPSProxiable} from "../proxy/UUPSProxiable.sol";
 
 /**
 @title Mock implementations for testing the proxy contracts
 @notice test associated StakingTask.t.sol:test_ProxyImplementation
  */
 
-contract MockProxyV1 is UUPSUpgradeable, Initializable {
+contract MockProxyV1 is UUPSProxiable, Initializable {
     address public owner;
 
     function initialize(address _owner) external reinitializer(1) {
@@ -27,7 +27,7 @@ contract MockProxyV1 is UUPSUpgradeable, Initializable {
     }
 }
 
-contract MockProxyV2 is UUPSUpgradeable, Initializable {
+contract MockProxyV2 is UUPSProxiable, Initializable {
     address public owner;
     uint public counter;
 

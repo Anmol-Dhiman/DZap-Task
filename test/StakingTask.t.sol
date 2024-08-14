@@ -188,6 +188,24 @@ contract StakingTaskTests is Test {
 
         vm.stopPrank();
     }
+    /**
+     *@dev no of contract != no of ids while staking
+     */
+    function test_StakeImbalancNumberOfContractAndIds() public {
+        vm.startPrank(user);
+        address[] memory nftContracts = new address[](10);
+        uint[] memory ids = new uint[](11);
+
+        for (uint i = 0; i < 10; i++) {
+            MockNFT _contract = new MockNFT();
+            uint tokenId = _contract.mint();
+            nftContracts[i] = address(_contract);
+            ids[i] = tokenId;
+            _contract.approve(address(stakingContract), tokenId);
+        }
+        vm.expectRevert("invalid number of ids or contract address provided");
+        stakingContract.stakeNFT(nftContracts, ids);
+    }
 
     /**
      * @dev test unstaking nft and check the storage values are set corretly or not
@@ -292,11 +310,57 @@ contract StakingTaskTests is Test {
         vm.warp(block.timestamp + 1 days);
 
         stakingContract.claimReward();
-(, uint32 rewardsCalimedAt) = stakingContract.s_userStakingData(user);
+        (, uint32 rewardsCalimedAt) = stakingContract.s_userStakingData(user);
 
         require(user.balance == (1000 - 1) * 10 * rewardPerBlock);
         require(rewardsCalimedAt == uint32(1 days + 1));
         vm.stopPrank();
+    }
+
+    /**
+     *@dev no of contract != no of ids while unstaking
+     */
+    function test_UnstakeImbalancNumberOfContractAndIds() public {
+        vm.startPrank(user);
+        address[] memory nftContracts = new address[](10);
+        uint[] memory ids = new uint[](10);
+        uint[] memory _ids = new uint[](11);
+
+        for (uint i = 0; i < 10; i++) {
+            MockNFT _contract = new MockNFT();
+            uint tokenId = _contract.mint();
+            nftContracts[i] = address(_contract);
+            ids[i] = tokenId;
+            _ids[i] = tokenId;
+            _contract.approve(address(stakingContract), tokenId);
+        }
+        stakingContract.stakeNFT(nftContracts, ids);
+
+        vm.roll(100);
+        vm.expectRevert("invalid number of ids or contract address provided");
+        stakingContract.unstakeNFT(nftContracts, _ids);
+    }
+
+    function test_UnStakeWithoutStaking() public {
+        vm.startPrank(user);
+        // array out of bound
+        vm.expectRevert();
+        stakingContract.unstakeNFT(address(nftContract), 1);
+
+        uint[] memory ids = new uint[](10);
+        for (uint i = 0; i < 10; i++) {
+            uint tokenId = nftContract.mint();
+            nftContract.approve(address(stakingContract), tokenId);
+            ids[i] = tokenId;
+        }
+
+        stakingContract.stakeNFT(address(nftContract), ids);
+        MockNFT _nftcontract = new MockNFT();
+        uint tokenId = _nftcontract.mint();
+        _nftcontract.approve(address(stakingContract), tokenId);
+        // index will be zero for these arguments
+        vm.expectRevert();
+        stakingContract.unstakeNFT(address(stakingContract), tokenId);
     }
 
     /**
@@ -681,5 +745,34 @@ contract StakingTaskTests is Test {
         require(noOfNFTsStaked == 0);
         require(rewardsClaimedAt == uint32(block.timestamp));
         vm.stopPrank();
+    }
+
+    /**
+     * @dev test on ERC721 receieve require statement
+     */
+    function test_OnERC721Receive() public {
+        vm.startPrank(user);
+        //only nft contracts can call this function
+        vm.expectRevert("invalid operator");
+        stakingContract.onERC721Received(address(this), user, 1, "");
+    }
+
+    /**
+     * @dev test reinitializer modifier
+     */
+    function test_InvalidImplementationVersion() public {
+        vm.startPrank(user);
+        StakingTask _stakingContract = new StakingTask();
+        vm.expectRevert();
+        stakingContract.upgradeToAndCall(
+            address(_stakingContract),
+            abi.encodeWithSignature(
+                "initialize(address,uint256,uint32,uint32)",
+                owner,
+                rewardPerBlock,
+                delay,
+                delay
+            )
+        );
     }
 }

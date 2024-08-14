@@ -6,8 +6,8 @@ pragma solidity 0.8.23;
 import {Pausable} from "openzeppelin-contracts/utils/Pausable.sol";
 import {IERC721Receiver} from "openzeppelin-contracts/token/ERC721/IERC721Receiver.sol";
 import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
-import {Initializable} from "openzeppelin-contracts/proxy/utils/Initializable.sol";
-import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "./proxy/Initializable.sol";
+import {UUPSProxiable} from "./proxy/UUPSProxiable.sol";
 
 /**
 @title Smart Contract Development Task for Dzap
@@ -16,7 +16,7 @@ StakingTask is the contract where user can stake NFT and can get rewards per blo
 contract StakingTask is
     Pausable,
     IERC721Receiver,
-    UUPSUpgradeable,
+    UUPSProxiable,
     Initializable
 {
     struct NFTStakingData {
@@ -345,12 +345,13 @@ contract StakingTask is
      * @param _id nft tokenId
      */
     function _unstakeNFT(address _contractAddress, uint _id) internal {
+        require(
+            address(this) == IERC721(_contractAddress).ownerOf(_id),
+            "Invalid nft for unstaking"
+        );
         address user = _msgSender();
         uint256 index = s_nftIndex[user][_contractAddress][_id];
-        require(
-            s_userStakingData[user].nftData[index].isStaked,
-            "Invalid nft for staking"
-        );
+
         s_userStakingData[user].noOfNFTsStaked--;
         s_userStakingData[user].nftData[index].isStaked = false;
         s_userStakingData[user].nftData[index].unstakingBlockNumber = block
