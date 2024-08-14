@@ -23,22 +23,17 @@ forge script --chain sepolia script/MockNFT.s.sol --rpc-url $SEPOLIA_RPC_URL --b
 ```
 
 ### Test scripts
+
 ```solidity
 forge test
 ```
 
-
-
 ### Deployed Contract (Sepolia)
 
-- StakingContract : 
-[0x600f947A88caF40eb57c2d8f501E781C4241E6A1]("https://sepolia.etherscan.io/address/0x600f947a88caf40eb57c2d8f501e781c4241e6a1#code")
+- StakingContract : <a href="https://sepolia.etherscan.io/address/0x600f947a88caf40eb57c2d8f501e781c4241e6a1#code">0x600f947A88caF40eb57c2d8f501E781C4241E6A1</a>
 
-- MockNFT : [0x06F1E088FD03CFb779B9df404B4394Bb613af3F4]("https://sepolia.etherscan.io/address/0x06f1e088fd03cfb779b9df404b4394bb613af3f4#code")
-
+- MockNFT : <a href="https://sepolia.etherscan.io/address/0x06F1E088FD03CFb779B9df404B4394Bb613af3F4#code">0x06F1E088FD03CFb779B9df404B4394Bb613af3F4</a>
 
 ### Test Results
+
 ![Test Outputs](images/testOutput.png)
-
-
-

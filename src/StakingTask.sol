@@ -289,6 +289,7 @@ contract StakingTask is
                 s_userStakingData[user].nftData[i].stakingBlockNumber = block
                     .number;
             } else {
+                // unstaked but does already claimed or not 
                 if (
                     s_userStakingData[user].nftData[i].unstakingBlockNumber != 0
                 ) {
@@ -300,6 +301,7 @@ contract StakingTask is
                                 .nftData[i]
                                 .stakingBlockNumber) *
                         s_rewardPerBlock;
+                    // if user claims once after unstaking then user cannot get anymore rewards 
                     s_userStakingData[user].nftData[i].unstakingBlockNumber = 0;
                 }
             }
