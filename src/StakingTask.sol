@@ -13,7 +13,6 @@ import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeabl
 @title Smart Contract Development Task for Dzap
 StakingTask is the contract where user can stake NFT and can get rewards per block 
 */
-
 contract StakingTask is
     Pausable,
     IERC721Receiver,
@@ -54,12 +53,12 @@ contract StakingTask is
     //////////////////////////////////////////////////////////////*/
 
     /**
-    @dev initializer the contract with initial values thorugh proxy contract
-    @param _owner external EOA or multi-sig for governance
-    @param _rewardsPerBlock amount of eth user should get for each block for each nft staked.
-    @param _withdrawDelay delay time after which user can withdraw nft.
-    @param _rewardsClaimDelay delay time after which user can claim his accumulated reward
-    */
+     * @dev initializer the contract with initial values thorugh proxy contract
+     * @param _owner external EOA or multi-sig for governance
+     * @param _rewardsPerBlock amount of eth user should get for each block for each nft staked.
+     * @param _withdrawDelay delay time after which user can withdraw nft.
+     * @param _rewardsClaimDelay delay time after which user can claim his accumulated reward
+     */
     function initialize(
         address _owner,
         uint256 _rewardsPerBlock,
@@ -77,10 +76,10 @@ contract StakingTask is
     //////////////////////////////////////////////////////////////*/
 
     /**
-    @dev authorize function to update the implementation storage.
-    @param _newImplementation  address for new logic contract.
-    @notice this function can only be use by owner and have internal call through Proxy function upgradeToAndCall
-    */
+     * @dev authorize function to update the implementation storage.
+     * @param _newImplementation  address for new logic contract.
+     * @notice this function can only be use by owner and have internal call through Proxy function upgradeToAndCall
+     */
     function _authorizeUpgrade(
         address _newImplementation
     ) internal view override onlyOwner {
@@ -88,9 +87,9 @@ contract StakingTask is
     }
 
     /**
-    @dev update the rewards per block
-    @param _rewardsPerBlock new amount of rewards per block
-    @notice only owner can access this function.
+     * @dev update the rewards per block
+     * @param _rewardsPerBlock new amount of rewards per block
+     * @notice only owner can access this function.
      */
     function changeRewardsPerBlock(
         uint256 _rewardsPerBlock
@@ -99,19 +98,19 @@ contract StakingTask is
     }
 
     /**
-    @dev update the delay time for withdrawing nft
-    @param _withdrawDelay new delay time 
-    @notice only owner can access this function.
+     * @dev update the delay time for withdrawing nft
+     * @param _withdrawDelay new delay time
+     * @notice only owner can access this function.
      */
     function changeWithdrawDelay(uint32 _withdrawDelay) external onlyOwner {
         s_withdrawDelay = _withdrawDelay;
     }
 
     /**
-    @dev update the delay time for rewards collection
-    @param _rewardsClaimDelay new delay time
-   @notice only owner can access.  
-   */
+     * @dev update the delay time for rewards collection
+     * @param _rewardsClaimDelay new delay time
+     * @notice only owner can access.
+     */
     function changeRewardsClaimDelay(
         uint32 _rewardsClaimDelay
     ) external onlyOwner {
@@ -119,16 +118,16 @@ contract StakingTask is
     }
 
     /**
-    @dev pause the staking functionality
-    @notice only owner can access this function
+     * @dev pause the staking functionality
+     * @notice only owner can access this function
      */
     function pause() external onlyOwner {
         _pause();
     }
 
     /**
-    @dev unpause the staking functionlaity
-    @notice only owner can access this function
+     * @dev unpause the staking functionlaity
+     * @notice only owner can access this function
      */
     function unpause() external onlyOwner {
         _unpause();
@@ -139,11 +138,11 @@ contract StakingTask is
     //////////////////////////////////////////////////////////////*/
 
     /**
-    @dev stake single nft
-    @param _nftContractAddress nft contract address 
-    @param _id nft tokenId 
-    @notice user have to approve before staking the nft.
-    @notice only accessable when not paused
+     * @dev stake single nft
+     * @param _nftContractAddress nft contract address
+     * @param _id nft tokenId
+     * @notice user have to approve before staking the nft.
+     * @notice only accessable when not paused
      */
     function stakeNFT(
         address _nftContractAddress,
@@ -152,11 +151,11 @@ contract StakingTask is
         _stakeNFT(_nftContractAddress, _id);
     }
     /**
-    @dev stake multiple nfts of same contract 
-    @param _nftContractAddress    nft contract addresses.
-    @param _ids array of nft tokenIds 
-    @notice user have to approve all the nfts before staking
-    @notice only accessable when not paused
+     * @dev stake multiple nfts of same contract
+     * @param _nftContractAddress    nft contract addresses.
+     * @param _ids array of nft tokenIds
+     * @notice user have to approve all the nfts before staking
+     * @notice only accessable when not paused
      */
     function stakeNFT(
         address _nftContractAddress,
@@ -168,11 +167,11 @@ contract StakingTask is
     }
 
     /**
-    @dev stake multiple nfts of different contract 
-    @param _contractAddress  array of nft contract addresses.
-    @param _ids array of nft tokenIds 
-    @notice user have to approve all the nfts from all different contract before staking
-    @notice only accessable when not paused
+     * @dev stake multiple nfts of different contract
+     * @param _contractAddress  array of nft contract addresses.
+     * @param _ids array of nft tokenIds
+     * @notice user have to approve all the nfts from all different contract before staking
+     * @notice only accessable when not paused
      */
     function stakeNFT(
         address[] memory _contractAddress,
@@ -192,28 +191,56 @@ contract StakingTask is
     }
 
     /**
-    @dev unstake nft, no rewards collected after unstaking nft
-    @param _contractAddress nft contract address
-    @param _id nft tokenId
+     * @dev unstake single nft
+     * @param _nftContractAddress nft contract address
+     * @param _id nft tokenId
      */
-    function unstakeNFT(address _contractAddress, uint _id) external {
-        address user = _msgSender();
-        uint256 index = s_nftIndex[user][_contractAddress][_id];
-        s_userStakingData[user].nftData[index].isStaked = false;
-        s_userStakingData[user].nftData[index].unstakingBlockNumber = block
-            .number;
-        s_userStakingData[user].nftData[index].unstakeTime = uint32(
-            block.timestamp
-        );
+    function unstakeNFT(address _nftContractAddress, uint256 _id) external {
+        _unstakeNFT(_nftContractAddress, _id);
     }
 
     /**
-    @dev withdraw nft after unstaking
-    @param _contractAddress nft contract address
-    @param _id nft tokenId
-    @notice only after withdrawDelay nft can be withdrawn
-    @notice unstake nft before withdrawing
-    @notice user have to claim their rewards before withdrawing nft otherwise rewards will be lost
+     * @dev unstake multiple nft of same contract
+     * @param _nftContractAddress nft contract address
+     * @param _ids array of nft tokenIds
+     */
+    function unstakeNFT(
+        address _nftContractAddress,
+        uint256[] memory _ids
+    ) external {
+        for (uint256 i = 0; i < _ids.length; i++) {
+            _unstakeNFT(_nftContractAddress, _ids[i]);
+        }
+    }
+    /**
+     * @dev unstake nfts of differnet contracts
+     * @param _contractAddress array of different nft contracts
+     * @param _ids array of nft tokenIds
+     */
+    function unstakeNFT(
+        address[] memory _contractAddress,
+        uint256[] memory _ids
+    ) external {
+        require(
+            _contractAddress.length == _ids.length,
+            "invalid number of ids or contract address provided"
+        );
+        for (
+            uint256 i = 0;
+            i < _contractAddress.length && i < _ids.length;
+            i++
+        ) {
+            _unstakeNFT(_contractAddress[i], _ids[i]);
+        }
+    }
+
+    /**
+     * @dev withdraw nft after unstaking
+     * @param _contractAddress nft contract address
+     * @param _id nft tokenId
+     * @notice only after withdrawDelay nft can be withdrawn
+     * @notice unstake nft before withdrawing
+     * @notice user have to claim their rewards before withdrawing nft otherwise rewards will be lost
      */
     function withdrawNFT(address _contractAddress, uint256 _id) external {
         address user = _msgSender();
@@ -229,7 +256,6 @@ contract StakingTask is
             user,
             _id
         );
-        s_userStakingData[user].noOfNFTsStaked--;
         uint length = s_userStakingData[user].nftData.length;
         s_userStakingData[user].nftData[index] = s_userStakingData[user]
             .nftData[length - 1];
@@ -240,9 +266,9 @@ contract StakingTask is
     }
 
     /**
-    @dev claim the accumalted rewards for all the nfts staked by user
-    @notice only after claim delay user can claim his rewards
-    @notice renew the claim time to make user serve delay for claiming rewards
+     * @dev claim the accumalted rewards for all the nfts staked by user
+     * @notice only after claim delay user can claim his rewards
+     * @notice renew the claim time to make user serve delay for claiming rewards
      */
     function claimReward() external {
         address user = _msgSender();
@@ -287,9 +313,9 @@ contract StakingTask is
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     /**
-    @dev logic for staking one nft 
-    @param _contractAddress nft contract address
-    @param _id nft tokenId
+     * @dev logic for staking one nft
+     * @param _contractAddress nft contract address
+     * @param _id nft tokenId
      */
     function _stakeNFT(address _contractAddress, uint256 _id) internal {
         IERC721 nftContract = IERC721(_contractAddress);
@@ -311,6 +337,27 @@ contract StakingTask is
         s_nftIndex[user][_contractAddress][_id] =
             s_userStakingData[user].nftData.length -
             1;
+    }
+
+    /**
+     * @dev logic for unstaking one nft
+     * @param _contractAddress nft contract address
+     * @param _id nft tokenId
+     */
+    function _unstakeNFT(address _contractAddress, uint _id) internal {
+        address user = _msgSender();
+        uint256 index = s_nftIndex[user][_contractAddress][_id];
+        require(
+            s_userStakingData[user].nftData[index].isStaked,
+            "Invalid nft for staking"
+        );
+        s_userStakingData[user].noOfNFTsStaked--;
+        s_userStakingData[user].nftData[index].isStaked = false;
+        s_userStakingData[user].nftData[index].unstakingBlockNumber = block
+            .number;
+        s_userStakingData[user].nftData[index].unstakeTime = uint32(
+            block.timestamp
+        );
     }
 
     /**
@@ -340,15 +387,15 @@ contract StakingTask is
     //////////////////////////////////////////////////////////////*/
 
     /**
-    @dev get nft data fields store in this contract
-    @param _index index at which nft data store in array in s_userStakingData:NFTStakingData
-    @return isStaked is nft staked or not unstaked
-    @return contractAddress nft contractAddress
-    @return id nft token id
-    @return stakingBlockNumber block.number at which nft staked
-    @return unstakingBlockNumber block.number at which nft unstaked
-    @return unstakeTime block.timestamp at which nft is unstaked
-    @return stakeTime block.timestamp at which nft is staked
+     * @dev get nft data fields store in this contract
+     * @param _index index at which nft data store in array in s_userStakingData:NFTStakingData
+     * @return isStaked is nft staked or not unstaked
+     * @return contractAddress nft contractAddress
+     * @return id nft token id
+     * @return stakingBlockNumber block.number at which nft staked
+     * @return unstakingBlockNumber block.number at which nft unstaked
+     * @return unstakeTime block.timestamp at which nft is unstaked
+     * @return stakeTime block.timestamp at which nft is staked
      */
     function getNFTData(
         uint256 _index

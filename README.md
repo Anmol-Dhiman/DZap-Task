@@ -1,66 +1,36 @@
-## Foundry
+# DZap Smart Contract Task
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+### Task Description
 
-Foundry consists of:
+- Staking NFT and get rewards per block
+- Staking should be pausable
+- user can claim rewards after a delay time
+- user can withdraw nft after delay time
+- owner can change rewards per block, claim delay, withdraw delay
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+### Deployment Scripts
 
-## Documentation
+```solidity
+# To load the variables in the .env file
+source .env
 
-https://book.getfoundry.sh/
+# To deploy and verify staking contract
+forge script --chain sepolia script/StakingTask.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify -vvvv
 
-## Usage
+# To deploy and verify staking contract
+forge script --chain sepolia script/MockNFT.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify -vvvv
 
-### Build
-
-```shell
-$ forge build
 ```
 
-### Test
+### Deploye Contract
 
-```shell
-$ forge test
-```
+- StakingContract : [0x600f947A88caF40eb57c2d8f501E781C4241E6A1]("https://sepolia.etherscan.io/address/0x600f947a88caf40eb57c2d8f501e781c4241e6a1#code")
 
-### Format
+- MockNFT : [0x06F1E088FD03CFb779B9df404B4394Bb613af3F4]("https://sepolia.etherscan.io/address/0x06f1e088fd03cfb779b9df404b4394bb613af3f4#code")
 
-```shell
-$ forge fmt
-```
 
-### Gas Snapshots
+### Test Results
+![Test Outputs](images/testOutput.png)
 
-```shell
-$ forge snapshot
-```
 
-### Anvil
 
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```

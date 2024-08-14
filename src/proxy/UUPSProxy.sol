@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 
 /* 
   @reference ->
-  1.  https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
+  1. https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
   2. https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/ERC1967/ERC1967Utils.sol
  */
 contract UUPSProxy {

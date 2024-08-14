@@ -227,6 +227,77 @@ contract StakingTaskTests is Test {
 
         vm.stopPrank();
     }
+    /**
+     * @dev test unstaking multiple nft of same contract
+     */
+    function test_UnstakeMultipleNFTSameContract() public {
+        vm.startPrank(user);
+        vm.deal(address(stakingContract), 1 ether);
+        uint[] memory ids = new uint[](10);
+        for (uint i = 0; i < 10; i++) {
+            uint tokenId = nftContract.mint();
+            nftContract.approve(address(stakingContract), tokenId);
+            ids[i] = tokenId;
+        }
+
+        stakingContract.stakeNFT(address(nftContract), ids);
+        (uint256 noOfNFTsStakedBefore, ) = stakingContract.s_userStakingData(
+            user
+        );
+
+        require(noOfNFTsStakedBefore == 10);
+
+        vm.roll(1000);
+        stakingContract.unstakeNFT(address(nftContract), ids);
+        (uint256 noOfNFTsStakedAfter, ) = stakingContract.s_userStakingData(
+            user
+        );
+        vm.warp(1 days);
+        require(noOfNFTsStakedAfter == 0);
+        stakingContract.claimReward();
+        (, uint32 rewardsCalimedAt) = stakingContract.s_userStakingData(user);
+
+        require(user.balance == (1000 - 1) * 10 * rewardPerBlock);
+        require(rewardsCalimedAt == uint32(1 days));
+        vm.stopPrank();
+    }
+
+    /**
+     *@dev test unstaking multiple nft of different contract
+     */
+    function test_UnstakeMultipleNFTDifferentContract() public {
+        vm.startPrank(user);
+        vm.deal(address(stakingContract), 1 ether);
+        address[] memory nftContracts = new address[](10);
+        uint[] memory ids = new uint[](10);
+
+        for (uint i = 0; i < 10; i++) {
+            MockNFT _contract = new MockNFT();
+            uint tokenId = _contract.mint();
+            nftContracts[i] = address(_contract);
+            ids[i] = tokenId;
+            _contract.approve(address(stakingContract), tokenId);
+        }
+        stakingContract.stakeNFT(nftContracts, ids);
+        (uint256 noOfNFTsStakedBefore, ) = stakingContract.s_userStakingData(
+            user
+        );
+        require(noOfNFTsStakedBefore == 10);
+        vm.roll(1000);
+        stakingContract.unstakeNFT(nftContracts, ids);
+        (uint256 noOfNFTsStakedAfter, ) = stakingContract.s_userStakingData(
+            user
+        );
+        require(noOfNFTsStakedAfter == 0);
+        vm.warp(block.timestamp + 1 days);
+
+        stakingContract.claimReward();
+(, uint32 rewardsCalimedAt) = stakingContract.s_userStakingData(user);
+
+        require(user.balance == (1000 - 1) * 10 * rewardPerBlock);
+        require(rewardsCalimedAt == uint32(1 days + 1));
+        vm.stopPrank();
+    }
 
     /**
      * @dev test withdraw nft require statments
