@@ -2,6 +2,11 @@
 pragma solidity 0.8.23;
 import {ERC721} from "openzeppelin-contracts/token/ERC721/ERC721.sol";
 
+// @custom:authors: [@anmol-dhiman]
+
+/**
+@title Mock NFT contract to test StakingTasl.sol:StakingTask.
+ */
 contract MockNFT is ERC721 {
     uint256 public tokenId;
     constructor() ERC721("mock NFT contract", "MNFT") {}
