@@ -26,7 +26,6 @@ contract StakingTask is
         uint256 stakingBlockNumber; // block.number at which nft is staked
         uint256 unstakingBlockNumber; // block.number at which nft is unstaked
         uint32 unstakeTime; //block.timestamp at which nft is unstaked
-        uint32 stakeTime; //block.timestamp at which nft is staked
     }
 
     struct UserStakingData {
@@ -289,7 +288,7 @@ contract StakingTask is
                 s_userStakingData[user].nftData[i].stakingBlockNumber = block
                     .number;
             } else {
-                // unstaked but does already claimed or not 
+                // unstaked but does already claimed or not
                 if (
                     s_userStakingData[user].nftData[i].unstakingBlockNumber != 0
                 ) {
@@ -301,7 +300,7 @@ contract StakingTask is
                                 .nftData[i]
                                 .stakingBlockNumber) *
                         s_rewardPerBlock;
-                    // if user claims once after unstaking then user cannot get anymore rewards 
+                    // if user claims once after unstaking then user cannot get anymore rewards
                     s_userStakingData[user].nftData[i].unstakingBlockNumber = 0;
                 }
             }
@@ -325,15 +324,7 @@ contract StakingTask is
         nftContract.safeTransferFrom(user, address(this), _id);
         s_userStakingData[user].noOfNFTsStaked++;
         s_userStakingData[user].nftData.push(
-            NFTStakingData(
-                true,
-                _contractAddress,
-                _id,
-                block.number,
-                0,
-                0,
-                uint32(block.timestamp)
-            )
+            NFTStakingData(true, _contractAddress, _id, block.number, 0, 0)
         );
         // 0 is reserved for null values
         s_nftIndex[user][_contractAddress][_id] =
@@ -398,15 +389,10 @@ contract StakingTask is
      * @return stakingBlockNumber block.number at which nft staked
      * @return unstakingBlockNumber block.number at which nft unstaked
      * @return unstakeTime block.timestamp at which nft is unstaked
-     * @return stakeTime block.timestamp at which nft is staked
      */
     function getNFTData(
         uint256 _index
-    )
-        external
-        view
-        returns (bool, address, uint256, uint256, uint256, uint32, uint32)
-    {
+    ) external view returns (bool, address, uint256, uint256, uint256, uint32) {
         NFTStakingData memory _nftStakingData = s_userStakingData[_msgSender()]
             .nftData[_index];
         return (
@@ -415,8 +401,7 @@ contract StakingTask is
             _nftStakingData.id,
             _nftStakingData.stakingBlockNumber,
             _nftStakingData.unstakingBlockNumber,
-            _nftStakingData.unstakeTime,
-            _nftStakingData.stakeTime
+            _nftStakingData.unstakeTime
         );
     }
 }

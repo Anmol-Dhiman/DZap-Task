@@ -84,8 +84,7 @@ contract StakingTaskTests is Test {
             uint256 id,
             uint256 stakingBlockNumber,
             uint256 unstakingBlockNumber,
-            uint32 unstakeTime,
-            uint32 stakeTime
+            uint32 unstakeTime
         ) = stakingContract.getNFTData(index);
 
         require(isStaked == true);
@@ -94,7 +93,7 @@ contract StakingTaskTests is Test {
         require(stakingBlockNumber == block.number);
         require(unstakingBlockNumber == 0);
         require(unstakeTime == 0);
-        require(stakeTime == block.timestamp);
+        
         vm.stopPrank();
     }
 
@@ -129,8 +128,7 @@ contract StakingTaskTests is Test {
                 uint256 id,
                 uint256 stakingBlockNumber,
                 uint256 unstakingBlockNumber,
-                uint32 unstakeTime,
-                uint32 stakeTime
+                uint32 unstakeTime
             ) = stakingContract.getNFTData(index);
 
             require(isStaked == true);
@@ -139,7 +137,7 @@ contract StakingTaskTests is Test {
             require(stakingBlockNumber == block.number);
             require(unstakingBlockNumber == 0);
             require(unstakeTime == 0);
-            require(stakeTime == block.timestamp);
+           
         }
 
         vm.stopPrank();
@@ -173,8 +171,7 @@ contract StakingTaskTests is Test {
                 uint256 id,
                 uint256 stakingBlockNumber,
                 uint256 unstakingBlockNumber,
-                uint32 unstakeTime,
-                uint32 stakeTime
+                uint32 unstakeTime
             ) = stakingContract.getNFTData(index);
 
             require(isStaked == true);
@@ -183,7 +180,7 @@ contract StakingTaskTests is Test {
             require(stakingBlockNumber == block.number);
             require(unstakingBlockNumber == 0);
             require(unstakeTime == 0);
-            require(stakeTime == block.timestamp);
+            
         }
 
         vm.stopPrank();
@@ -231,8 +228,7 @@ contract StakingTaskTests is Test {
             uint256 id,
             uint256 stakingBlockNumber,
             uint256 unstakingBlockNumber,
-            uint32 unstakeTime,
-            uint32 stakeTime
+            uint32 unstakeTime
         ) = stakingContract.getNFTData(index);
 
         require(isStaked == false);
@@ -241,7 +237,6 @@ contract StakingTaskTests is Test {
         require(stakingBlockNumber == 1);
         require(unstakingBlockNumber == 100);
         require(unstakeTime == 1000);
-        require(stakeTime == 1);
 
         vm.stopPrank();
     }
@@ -503,7 +498,7 @@ contract StakingTaskTests is Test {
         }
 
         for (uint i = 0; i < 1000; i++) {
-            (, , , uint stakingBlockNumber, , , ) = stakingContract.getNFTData(
+            (, , , uint stakingBlockNumber, ,  ) = stakingContract.getNFTData(
                 i
             );
             totalBlocks += block.number - stakingBlockNumber;
