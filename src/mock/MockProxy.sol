@@ -14,6 +14,9 @@ import {UUPSProxiable} from "../proxy/UUPSProxiable.sol";
 contract MockProxyV1 is UUPSProxiable, Initializable {
     address public owner;
 
+    constructor() {
+        _disableInitializers();
+    }
     function initialize(address _owner) external reinitializer(1) {
         owner = _owner;
     }

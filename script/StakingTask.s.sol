@@ -36,7 +36,7 @@ contract StakingTaskScript is Script {
 
         StakingTask _task = StakingTask(address(proxy));
         console.log(_task.s_owner());
-        console.log(_task.s_rewardPerBlock());
+        
         console.log(_task.s_withdrawDelay());
         console.log(_task.s_rewardsClaimDelay());
 

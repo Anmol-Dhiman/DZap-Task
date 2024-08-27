@@ -35,7 +35,12 @@ contract StakingTaskTests is Test {
      */
     function test_StateVariableCheck() public {
         require(stakingContract.s_owner() == owner);
-        require(stakingContract.s_rewardPerBlock() == rewardPerBlock);
+        require(stakingContract.s_noOfTimeRewardChanged() == 1);
+        (uint changeBlockNumber, uint rewardsValue) = stakingContract
+            .s_rewardPerBlock(0);
+
+        require(changeBlockNumber == block.number);
+        require(rewardsValue == rewardPerBlock);
         require(stakingContract.s_withdrawDelay() == 1 days);
         require(stakingContract.s_rewardsClaimDelay() == 1 days);
     }
@@ -93,7 +98,7 @@ contract StakingTaskTests is Test {
         require(stakingBlockNumber == block.number);
         require(unstakingBlockNumber == 0);
         require(unstakeTime == 0);
-        
+
         vm.stopPrank();
     }
 
@@ -137,7 +142,6 @@ contract StakingTaskTests is Test {
             require(stakingBlockNumber == block.number);
             require(unstakingBlockNumber == 0);
             require(unstakeTime == 0);
-           
         }
 
         vm.stopPrank();
@@ -180,7 +184,6 @@ contract StakingTaskTests is Test {
             require(stakingBlockNumber == block.number);
             require(unstakingBlockNumber == 0);
             require(unstakeTime == 0);
-            
         }
 
         vm.stopPrank();
@@ -498,9 +501,7 @@ contract StakingTaskTests is Test {
         }
 
         for (uint i = 0; i < 1000; i++) {
-            (, , , uint stakingBlockNumber, ,  ) = stakingContract.getNFTData(
-                i
-            );
+            (, , , uint stakingBlockNumber, , ) = stakingContract.getNFTData(i);
             totalBlocks += block.number - stakingBlockNumber;
         }
 
@@ -770,4 +771,186 @@ contract StakingTaskTests is Test {
             )
         );
     }
+
+    function test_ClaimRewardIfStatementsCheck() public {
+        vm.startPrank(user);
+        vm.deal(address(stakingContract), 1 ether);
+
+        uint tokenId = nftContract.mint();
+        nftContract.approve(address(stakingContract), tokenId);
+
+        stakingContract.stakeNFT(address(nftContract), tokenId);
+
+        vm.roll(100);
+        vm.warp(1 days);
+        stakingContract.claimReward();
+        // if statement check
+        require(user.balance == (100 - 1) * rewardPerBlock);
+        uint balanceBefore = user.balance;
+
+        vm.roll(400);
+        vm.warp(3 days);
+        stakingContract.unstakeNFT(address(nftContract), tokenId);
+        stakingContract.claimReward();
+        // else if statement check
+        require(user.balance == (400 - 100) * rewardPerBlock + balanceBefore);
+        balanceBefore = user.balance;
+
+        vm.roll(600);
+        vm.warp(5 days);
+        stakingContract.claimReward();
+        require(user.balance == balanceBefore);
+    }
+
+    function test_dynamicRewardsAfterStakingOnly() external {
+        vm.startPrank(user);
+        uint tokenId = nftContract.mint();
+        nftContract.approve(address(stakingContract), tokenId);
+        console.log(block.number);
+        vm.roll(100);
+        stakingContract.stakeNFT(address(nftContract), tokenId);
+        vm.stopPrank();
+
+        vm.roll(150);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(0.01 ether);
+
+        vm.roll(374);
+        stakingContract.changeRewardsPerBlock(1 ether);
+        vm.stopPrank();
+
+        vm.roll(564);
+        require(user.balance == 0);
+
+        vm.deal(address(stakingContract), 200 ether);
+        vm.warp(block.timestamp + 1 days);
+        vm.startPrank(user);
+        require(stakingContract.s_noOfTimeRewardChanged() == 3);
+        stakingContract.claimReward();
+
+        uint totalReward = ((150 - 100) * rewardPerBlock) +
+            ((374 - 150) * 0.01 ether) +
+            ((564 - 374) * 1 ether);
+
+        require(user.balance == totalReward);
+    }
+
+    function test_dynamicRewardsAfterUnstaking() external {
+        vm.startPrank(user);
+        uint tokenId = nftContract.mint();
+        nftContract.approve(address(stakingContract), tokenId);
+        console.log(block.number);
+        vm.roll(100);
+        stakingContract.stakeNFT(address(nftContract), tokenId);
+        vm.stopPrank();
+
+        vm.roll(150);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(0.01 ether);
+        vm.stopPrank();
+
+        vm.roll(220);
+        vm.startPrank(user);
+        stakingContract.unstakeNFT(address(nftContract), tokenId);
+        vm.stopPrank();
+
+        vm.roll(374);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(1 ether);
+        vm.stopPrank();
+
+        vm.roll(564);
+        require(user.balance == 0);
+
+        vm.deal(address(stakingContract), 200 ether);
+        vm.warp(block.timestamp + 1 days);
+        vm.startPrank(user);
+        require(stakingContract.s_noOfTimeRewardChanged() == 3);
+        stakingContract.claimReward();
+
+        uint totalReward = ((150 - 100) * rewardPerBlock) +
+            ((220 - 150) * 0.01 ether);
+
+        require(user.balance == totalReward);
+    }
+
+    function test_dyanmicRewardsAfterStakingMultipleNFT() external {
+        vm.startPrank(user);
+        uint tokenId = nftContract.mint();
+        nftContract.approve(address(stakingContract), tokenId);
+        console.log(block.number);
+        vm.roll(100);
+        stakingContract.stakeNFT(address(nftContract), tokenId);
+        vm.stopPrank();
+
+        vm.roll(150);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(0.01 ether);
+        vm.stopPrank();
+
+        vm.roll(180);
+        vm.startPrank(user);
+        uint tokenId2 = nftContract.mint();
+        nftContract.approve(address(stakingContract), tokenId2);
+        stakingContract.stakeNFT(address(nftContract), tokenId2);
+        vm.stopPrank();
+
+        vm.roll(220);
+        vm.startPrank(user);
+        stakingContract.unstakeNFT(address(nftContract), tokenId);
+        vm.stopPrank();
+
+        vm.roll(374);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(1 ether);
+        vm.stopPrank();
+
+        vm.roll(564);
+        require(user.balance == 0);
+
+        vm.deal(address(stakingContract), 200 ether);
+        vm.warp(block.timestamp + 1 days);
+        vm.startPrank(user);
+        require(stakingContract.s_noOfTimeRewardChanged() == 3);
+        stakingContract.claimReward();
+
+        uint firstNFTReward = ((150 - 100) * rewardPerBlock) +
+            ((220 - 150) * 0.01 ether);
+
+        uint secondNFTReward = ((374 - 180) * 0.01 ether) +
+            ((564 - 374) * 1 ether);
+
+        require(user.balance == firstNFTReward + secondNFTReward);
+    }
+
+    function test_dynamicRewardElseStatementCheck() external {
+        vm.roll(150);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(0.01 ether);
+        vm.stopPrank();
+
+        vm.roll(374);
+        vm.startPrank(owner);
+        stakingContract.changeRewardsPerBlock(1 ether);
+        vm.stopPrank();
+
+        vm.roll(564);
+        vm.startPrank(user);
+        uint tokenId = nftContract.mint();
+        nftContract.approve(address(stakingContract), tokenId);
+        stakingContract.stakeNFT(address(nftContract), tokenId);
+        vm.stopPrank();
+        require(user.balance == 0);
+
+        vm.deal(address(stakingContract), 200 ether);
+        vm.warp(block.timestamp + 1 days);
+        vm.startPrank(user);
+        require(stakingContract.s_noOfTimeRewardChanged() == 3);
+        vm.roll(720);
+        stakingContract.claimReward();
+
+        require(user.balance == ((720 - 564) * 1 ether));
+    }
+
+    
 }
